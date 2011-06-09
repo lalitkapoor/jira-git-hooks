@@ -1,0 +1,3 @@
+username=""
+password=""
+wsdl="http://jira.example.com/rpc/soap/jirasoapservice-v2?wsdl"
