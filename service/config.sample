@@ -1,3 +1,4 @@
+type="server"
 username="admin jira username"
 password="admin jira password"
 wsdl="http://www.example.com/rpc/soap/jirasoapservice-v2?wsdl"
