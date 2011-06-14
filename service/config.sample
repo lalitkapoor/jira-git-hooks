@@ -1,0 +1,5 @@
+username="admin jira username"
+password="admin jira password"
+wsdl="http://www.example.com/rpc/soap/jirasoapservice-v2?wsdl"
+jelly="http://www.example.com/secure/admin/util/JellyRunner.jspa"
+userdata = "userdata.json"
