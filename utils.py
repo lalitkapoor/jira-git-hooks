@@ -1,4 +1,5 @@
 import re
+import json
 import pycurl
 import urllib
 import StringIO
@@ -7,7 +8,37 @@ from suds import WebFault
 
 import settings
 
-def parseMessage(comment):
+#set this
+config = None
+__userCache = {}
+
+def verifyIssue(client, auth, comment, author=None, curl=None, addComments=False):
+    global config
+    commands, issueIDs = _parseMessage(comment)
+    if len(commands)<1:
+    	print "No commands found"
+    
+    if len(issueIDs)<1:
+    	print "No JIRA issues found in commit message, make sure you prepend a '#' to each issue and command"
+    	exit(1) #exit because no issues were specified
+    #check to make sure all issues specified exist:
+    for issueID in issueIDs:
+    	try:
+    		issue = client.service.getIssue(auth, issueID)
+    		print "JIRA issue found:", issueID
+    		if addComments==True:
+    		    try:
+    		        #client.service.addComment(auth, issueID, {'body': comment})
+    		        _addComment(curl, issueID, comment, _githubUserToJiraUser(author))
+    		        print "comment added for JIRA issue:", issueID
+    		    except Exception as err:
+    		        print "Error adding JIRA comment:", issueID
+    		        print err
+    	except WebFault as err:
+    		print "Error finding JIRA issue:", issueID
+
+def _parseMessage(comment):
+    global config
     regex = r"\%s\w*[!-~]*\d*" % (settings.prefix)
     matches = re.findall(regex, comment)
 
@@ -27,35 +58,10 @@ def parseMessage(comment):
     		issueIDs.add(match)
     return (commands, issueIDs)
 
-def verifyIssue(config, client, auth, comment, author=None, curl=None, addComments=False):
-    commands, issueIDs = parseMessage(comment)
-    if len(commands)<1:
-    	print "No commands found"
-    
-    print commands
-    print issueIDs
-    
-    if len(issueIDs)<1:
-    	print "No JIRA issues found in commit message, make sure you prepend a '#' to each issue and command"
-    	exit(1) #exit because no issues were specified
-    #check to make sure all issues specified exist:
-    for issueID in issueIDs:
-    	try:
-    		issue = client.service.getIssue(auth, issueID)
-    		print "JIRA issue found:", issueID
-    		if addComments==True:
-    		    try:
-    		        #client.service.addComment(auth, issueID, {'body': comment})
-    		        addComment(curl, config.username, config.password, issueID, comment, githubUserToJiraUser(author))
-    		        print "comment added for JIRA issue:", issueID
-    		    except Exception as err:
-    		        print "Error adding JIRA comment:", issueID
-    	except WebFault as err:
-    		print "Error finding JIRA issue:", issueID
-
 #you will need to disable websudo inorder for jelly to work
 #this is a port of: http://jaredtyrrell.com/blog/2011/05/posting-bulk-jira-issues-with-jirajelly-and-curl/
-def addComment(curl, config, issueID, comment, commenter):
+def _addComment(curl, issueID, comment, commenter):
+    global config
     b = StringIO.StringIO()
 
     xml='<JiraJelly xmlns:jira="jelly:com.atlassian.jira.jelly.enterprise.JiraTagLib"><jira:AddComment comment="'+comment+'" issue-key="'+issueID+'" commenter="'+commenter+'"/></JiraJelly>'
@@ -75,7 +81,17 @@ def addComment(curl, config, issueID, comment, commenter):
     curl.perform()
     #curl.close()
 
-def githubUserToJiraUser(github):
-    #do a lookup in a json file
-    #return jira username
-    pass
+def _githubUserToJiraUser(username):
+    global config
+    global __userCache
+    if username in __userCache:
+        return __userCache[username]
+    else:
+        f = open(config.userdata)
+        __userCache = json.loads(f.read())
+        f.close()
+        if username in __userCache:
+            return __userCache[username]
+        else:
+            print "Error, github user:", username, "does not exist"
+            return ""
