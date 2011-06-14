@@ -20,7 +20,7 @@ def verifyIssue(client, auth, comment, author=None, curl=None, addComments=False
     
     if len(issueIDs)<1:
     	print "No JIRA issues found in commit message, make sure you prepend a '#' to each issue and command"
-    	if config.type=="client"
+    	if config.type=="client":
     	    exit(1) #exit because no issues were specified
     	else:
     	    return
