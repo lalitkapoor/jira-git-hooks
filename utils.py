@@ -12,7 +12,7 @@ import settings
 config = None
 __userCache = {}
 
-def verifyIssue(client, auth, comment, author=None, curl=None, addComments=False):
+def verifyIssue(config, client, auth, comment, author=None, curl=None, addComments=False):
     global config
     commands, issueIDs = _parseMessage(comment)
     if len(commands)<1:

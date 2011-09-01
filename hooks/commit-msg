@@ -9,7 +9,7 @@ from suds.client import Client
 import config
 import utils
 
-logging.basicConfig(level=logging.TRACE, filename='jira.log', format='%(asctime)s %(levelname)s\n%(message)s\n\n')
+logging.basicConfig(level=logging.INFO, filename='jira.log', format='%(asctime)s %(levelname)s\n%(message)s\n\n')
 client = Client(config.wsdl)
 auth = client.service.login(config.username, config.password)
 
